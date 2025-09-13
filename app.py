@@ -1,4 +1,4 @@
-zimport streamlit as st
+import streamlit as st
 from groq import Groq
 
 # ✅ Load API key from Streamlit Secrets
