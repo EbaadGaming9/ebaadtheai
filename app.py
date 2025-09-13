@@ -1,8 +1,7 @@
-import streamlit as st
+zimport streamlit as st
 from groq import Groq
-import os
 
-# ✅ Get API key from Streamlit Secrets (set in Streamlit Cloud, not in code)
+# ✅ Load API key from Streamlit Secrets
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 st.title("🤖 Ebaad - Your Personal AI")
@@ -25,11 +24,13 @@ if prompt := st.chat_input("Say something to Ebaad..."):
     with st.chat_message("assistant"):
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",  # ✅ Supported Groq model
-            messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
+            messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
         )
         reply = response.choices[0].message.content
         st.markdown(reply)
 
     # Save assistant message
     st.session_state.messages.append({"role": "assistant", "content": reply})
-)
