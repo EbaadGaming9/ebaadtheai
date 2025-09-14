@@ -14,10 +14,7 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 # Main title
 st.title("🤖 Ebaad - Your Personal AI (Groq API)")
-st.write("Hello! I'm **Ebaad**, your helpful personal AI assistant. Ask me anything below.")
-
-# Input box
-user_input = st.text_input("💬 Your question:")
+st.write("Chat with your assistant below:")
 
 # System instructions
 SYSTEM_PROMPT = (
@@ -27,20 +24,40 @@ SYSTEM_PROMPT = (
     "Otherwise, just be a friendly, concise, and helpful assistant."
 )
 
-# AI response
+# Initialize session state for chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "system", "content": SYSTEM_PROMPT}
+    ]
+
+# Show previous messages (chat history)
+for msg in st.session_state.messages[1:]:  # skip system prompt
+    if msg["role"] == "user":
+        st.markdown(f"🧑 **You:** {msg['content']}")
+    elif msg["role"] == "assistant":
+        st.markdown(f"🤖 **Ebaad:** {msg['content']}")
+
+# Chat input box
+user_input = st.chat_input("Type your message...")
+
+# Handle new input
 if user_input:
+    # Add user message
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    st.markdown(f"🧑 **You:** {user_input}")
+
+    # Get AI response
     with st.spinner("Thinking..."):
         try:
             response = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",  # ✅ Supported Groq model
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": user_input},
-                ],
+                messages=st.session_state.messages,
             )
-
             reply = response.choices[0].message.content
-            st.markdown(f"<div style='padding:10px; background:#f0f2f6; border-radius:8px;'>{reply}</div>", unsafe_allow_html=True)
+
+            # Add assistant reply
+            st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.markdown(f"🤖 **Ebaad:** {reply}")
 
         except Exception as e:
             st.error(f"⚠️ Error: {str(e)}")
