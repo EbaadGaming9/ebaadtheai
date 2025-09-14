@@ -2,11 +2,11 @@ import streamlit as st
 from groq import Groq
 
 # ---------------------------
-# Page Config (sets tab title + favicon)
+# Page Config
 # ---------------------------
 st.set_page_config(
     page_title="Ebaad AI",
-    page_icon="Logo.png",   # this shows in the browser tab
+    page_icon="🤖",
     layout="centered"
 )
 
