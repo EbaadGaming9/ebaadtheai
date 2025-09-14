@@ -1,84 +1,55 @@
-import re
 import streamlit as st
 from groq import Groq
 
-# Load Groq key from Streamlit Secrets (do NOT hardcode if publishing)
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+# Load API key securely
+api_key = st.secrets["GROQ_API_KEY"]
+client = Groq(api_key=api_key)
 
-# System prompt (defines Ebaad's identity, tone, and behavior)
-SYSTEM_PROMPT = (
-    "You are Ebaad, a helpful personal AI assistant created and owned by the user named Ebaad. "
-    "Always identify as 'Ebaad' when asked your name, and always say 'Ebaad developed me' "
-    "or similar phrasing when asked who created you. Be friendly, concise, and helpful."
+# Page settings
+st.set_page_config(
+    page_title="Ebaad AI",
+    page_icon="Logo.png",
+    layout="centered"
 )
 
-st.set_page_config(page_title="Ebaad", page_icon="🤖")
-st.title("🤖 Ebaad - Your Personal AI")
+# Custom footer
+hide_st_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #111;
+        color: white;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+    }
+    </style>
+"""
+st.markdown(hide_st_style, unsafe_allow_html=True)
+st.markdown('<div class="footer">⚡ Developed by Ebaad</div>', unsafe_allow_html=True)
 
-# Initialize chat history with the system prompt
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ]
+# Logo + Title
+st.image("Logo.png", width=150)
+st.title("🤖 Welcome to Ebaad AI")
+st.write("Your personal AI assistant, developed by Ebaad ✨")
 
-# Helper: match user questions that should get canned answers
-def check_canned_reply(user_text: str):
-    text = user_text.lower().strip()
+# Chatbot
+user_input = st.text_input("💬 Ask me anything:")
 
-    # Patterns for "who made you" / "who developed you"
-    made_patterns = [
-        r"\bwho (made|created|developed) (you|this|the bot|the assistant)\b",
-        r"\bwho (is )?your (creator|maker|developer)\b"
-    ]
-    for p in made_patterns:
-        if re.search(p, text):
-            return "Ebaad developed me."
-
-    # Patterns for "what is your name" / "who are you"
-    name_patterns = [
-        r"\bwhat'?s your name\b",
-        r"\bwhat is your name\b",
-        r"\bwho are you\b",
-        r"\bwho am i talking to\b",
-        r"\bwhat should i call you\b"
-    ]
-    for p in name_patterns:
-        if re.search(p, text):
-            return "My name is Ebaad."
-
-    # Add other canned replies here as needed:
-    # e.g., r"\bwhere are you from\b" -> "I was created by Ebaad."
-    return None
-
-# Display chat history
-for msg in st.session_state.messages:
-    if msg["role"] == "user":
-        st.chat_message("user").markdown(msg["content"])
-    elif msg["role"] == "assistant":
-        st.chat_message("assistant").markdown(msg["content"])
-    # ignore system messages in the UI
-
-# Input
-if prompt := st.chat_input("Ask Ebaad anything..."):
-    # Save user message
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").markdown(prompt)
-
-    # Check for canned reply first (guarantees consistent identity)
-    canned = check_canned_reply(prompt)
-    if canned:
-        # Return canned reply immediately (no API call)
-        st.session_state.messages.append({"role": "assistant", "content": canned})
-        st.chat_message("assistant").markdown(canned)
-    else:
-        # Otherwise, call the model with full conversation
-        with st.chat_message("assistant"):
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",  # or another supported model
-                messages=st.session_state.messages,
-            )
-            reply = response.choices[0].message.content
-            st.markdown(reply)
-
-        # Save assistant message
-        st.session_state.messages.append({"role": "assistant", "content": reply})
+if user_input:
+    with st.spinner("Thinking..."):
+        response = client.chat.completions.create(
+            model="llama-3.1-70b-versatile",
+            messages=[
+                {"role": "system", "content": "You are Ebaad AI, a helpful assistant developed by Ebaad."},
+                {"role": "user", "content": user_input},
+            ],
+        )
+        reply = response.choices[0].message.content
+        st.success(reply)
