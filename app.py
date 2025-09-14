@@ -1,18 +1,18 @@
 import streamlit as st
 from groq import Groq
 
-# Load API key securely
-api_key = st.secrets["GROQ_API_KEY"]
-client = Groq(api_key=api_key)
-
-# Page settings
+# ---------------------------
+# Page Config (sets tab title + favicon)
+# ---------------------------
 st.set_page_config(
     page_title="Ebaad AI",
-    page_icon="Logo.png",
+    page_icon="Logo.png",   # this shows in the browser tab
     layout="centered"
 )
 
-# Custom footer
+# ---------------------------
+# Custom CSS to hide Streamlit branding + add footer
+# ---------------------------
 hide_st_style = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -34,12 +34,20 @@ hide_st_style = """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 st.markdown('<div class="footer">⚡ Developed by Ebaad</div>', unsafe_allow_html=True)
 
-# Logo + Title
-st.image("Logo.png", width=150)
+# ---------------------------
+# Title
+# ---------------------------
 st.title("🤖 Welcome to Ebaad AI")
 st.write("Your personal AI assistant, developed by Ebaad ✨")
 
-# Chatbot
+# ---------------------------
+# Groq API Setup
+# ---------------------------
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+# ---------------------------
+# Chatbot UI
+# ---------------------------
 user_input = st.text_input("💬 Ask me anything:")
 
 if user_input:
