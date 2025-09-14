@@ -2,24 +2,22 @@ import streamlit as st
 from groq import Groq
 import os
 
-# Set page config
+# Page settings
 st.set_page_config(
     page_title="Ebaad - Your Personal AI",
     page_icon="🤖",
     layout="centered"
 )
 
-# Initialize Groq client with your API key
+# Initialize Groq client
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Title
+# Main title
 st.title("🤖 Ebaad - Your Personal AI (Groq API)")
+st.write("Hello! I'm **Ebaad**, your helpful personal AI assistant. Ask me anything below.")
 
-# Description
-st.write("Hello! I'm **Ebaad**, your helpful personal AI assistant. Ask me anything!")
-
-# User input
-user_input = st.text_input("💬 Ask Ebaad something:")
+# Input box
+user_input = st.text_input("💬 Your question:")
 
 # System instructions
 SYSTEM_PROMPT = (
@@ -29,7 +27,7 @@ SYSTEM_PROMPT = (
     "Otherwise, just be a friendly, concise, and helpful assistant."
 )
 
-# Response handling
+# AI response
 if user_input:
     with st.spinner("Thinking..."):
         try:
@@ -42,17 +40,24 @@ if user_input:
             )
 
             reply = response.choices[0].message.content
-            st.success(reply)
+            st.markdown(f"<div style='padding:10px; background:#f0f2f6; border-radius:8px;'>{reply}</div>", unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"⚠️ Error: {str(e)}")
 
-# Footer credit
+# Footer (fixed, bottom right)
 st.markdown(
     """
-    <div style="position: fixed; bottom: 10px; right: 10px; font-size: 12px; color: gray;">
-        Developed by Ebaad
-    </div>
+    <style>
+    .footer {
+        position: fixed;
+        bottom: 8px;
+        right: 15px;
+        font-size: 12px;
+        color: gray;
+    }
+    </style>
+    <div class="footer">Developed by Ebaad</div>
     """,
     unsafe_allow_html=True
 )
