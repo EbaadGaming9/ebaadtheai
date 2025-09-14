@@ -12,8 +12,8 @@ st.set_page_config(
 # Initialize Groq client
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Title
-st.title("🤖 Ebaad - Your Personal AI (Groq API)")
+# Title (fixed: no "Groq API")
+st.title("🤖 Ebaad - Your Personal AI")
 
 # System instructions
 SYSTEM_PROMPT = (
