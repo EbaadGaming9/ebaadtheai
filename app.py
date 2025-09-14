@@ -32,7 +32,7 @@ if "messages" not in st.session_state:
 # Display chat history
 for msg in st.session_state.messages[1:]:  # skip system
     if msg["role"] == "user":
-        with st.chat_message("user", avatar="🧑‍💻"):
+        with st.chat_message("user"):  # 👈 no avatar
             st.markdown(msg["content"])
     elif msg["role"] == "assistant":
         with st.chat_message("assistant", avatar="Logo.png"):
@@ -41,7 +41,7 @@ for msg in st.session_state.messages[1:]:  # skip system
 # Input box
 if user_input := st.chat_input("Type your message..."):
     # Show user
-    with st.chat_message("user", avatar="🧑‍💻"):
+    with st.chat_message("user"):  # 👈 no avatar
         st.markdown(user_input)
     st.session_state.messages.append({"role": "user", "content": user_input})
 
