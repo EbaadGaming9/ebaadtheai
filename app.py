@@ -1,108 +1,83 @@
-import re
 import streamlit as st
 from groq import Groq
+import os
 
-# ---------------------------
-# Page config (favicon only)
-# ---------------------------
+# ✅ Set up the page (title, favicon, layout)
 st.set_page_config(
     page_title="Ebaad AI",
-    page_icon="Logo.png",   # favicon in browser tab (use exact file name in your repo)
-    layout="centered",
+    page_icon="🤖",
+    layout="centered"
 )
 
-# ---------------------------
-# System prompt (keeps the model 'in character')
-# ---------------------------
+# ✅ Add custom CSS for bottom-right signature
+st.markdown(
+    """
+    <style>
+    .developed-by {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        font-size: 14px;
+        color: #888;
+        font-family: Arial, sans-serif;
+    }
+    </style>
+    <div class="developed-by">Developed by Ebaad</div>
+    """,
+    unsafe_allow_html=True
+)
+
+# ✅ Initialize Groq client
+api_key = os.getenv("GROQ_API_KEY")
+if not api_key:
+    st.error("🚨 Missing API key! Please set GROQ_API_KEY in your environment variables.")
+else:
+    client = Groq(api_key=api_key)
+
+# ✅ System prompt
 SYSTEM_PROMPT = (
     "You are Ebaad, a helpful personal AI assistant. "
-    "Always identify as 'Ebaad' when asked your name, and always say 'Ebaad developed me' "
-    "or similar phrasing when asked who created you. Be friendly, concise, and helpful."
+    "Introduce yourself as 'Ebaad' if asked your name. "
+    "Only say 'Ebaad developed me' when the user explicitly asks who made or created you. "
+    "Otherwise, just be a friendly, concise, and helpful assistant."
 )
 
-# ---------------------------
-# Helper: canned identity replies (guaranteed, no API call)
-# ---------------------------
-def canned_identity_reply(text: str) -> str | None:
-    t = text.lower().strip()
+# ✅ Title
+st.title("🤖 Ebaad - Your Personal AI (Groq API)")
 
-    # Who made / developed you
-    if re.search(r"\bwho (made|created|developed) (you|this|the bot|the assistant)\b", t) \
-       or re.search(r"\bwho (is )?your (creator|maker|developer)\b", t):
-        return "Ebaad developed me."
-
-    # Name / who are you
-    if re.search(r"\bwhat('?s| is) your name\b", t) \
-       or re.search(r"\bwho are you\b", t) \
-       or re.search(r"\bwho am i talking to\b", t) \
-       or re.search(r"\bwhat should i call you\b", t):
-        return "My name is Ebaad."
-
-    return None
-
-# ---------------------------
-# Initialize session state
-# ---------------------------
+# ✅ Chat history
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ]
+    st.session_state["messages"] = []
 
-# ---------------------------
-# UI header
-# ---------------------------
-st.title("🤖 Ebaad - Your Personal AI")
-st.write("Your personal AI assistant — ask me anything.")
+# ✅ Show chat history
+for message in st.session_state["messages"]:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-# ---------------------------
-# Groq client (load key from Streamlit Secrets)
-# ---------------------------
-# Make sure you set GROQ_API_KEY in Streamlit Cloud secrets (not in code)
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+# ✅ Input box
+user_input = st.chat_input("Type your message...")
 
-# ---------------------------
-# Show chat history (skip system messages)
-# ---------------------------
-for msg in st.session_state.messages:
-    if msg["role"] == "user":
-        st.chat_message("user").markdown(msg["content"])
-    elif msg["role"] == "assistant":
-        st.chat_message("assistant").markdown(msg["content"])
+if user_input:
+    # Save user message
+    st.session_state["messages"].append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-# ---------------------------
-# Input & handling
-# ---------------------------
-if prompt := st.chat_input("Ask Ebaad anything..."):
-    # Save and show user message
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").markdown(prompt)
-
-    # Check canned reply first (identity/name)
-    canned = canned_identity_reply(prompt)
-    if canned:
-        st.session_state.messages.append({"role": "assistant", "content": canned})
-        st.chat_message("assistant").markdown(canned)
-    else:
-        # Call model
-        with st.chat_message("assistant"):
+    # Call Groq API
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
             try:
-                resp = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",  # supported model — update if Groq deprecates it
-                    messages=st.session_state.messages,
+                response = client.chat.completions.create(
+                    model="llama-3.2-70b-text-preview",  # ✅ Stable supported model
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        *st.session_state["messages"],
+                    ],
                 )
-                reply = resp.choices[0].message.content
+                reply = response.choices[0].message.content
             except Exception as e:
-                # Friendly error to users; detailed error in logs
-                st.error("Sorry — Ebaad had trouble answering. Check the app logs (Manage app).")
-                # also append a short assistant message so conversation stays consistent
-                reply = "I'm having trouble accessing my model right now. Please try again later."
+                reply = f"⚠️ Error: {e}"
 
-            # display & save reply
-            st.markdown(reply)
-            st.session_state.messages.append({"role": "assistant", "content": reply})
+        st.markdown(reply)
+        st.session_state["messages"].append({"role": "assistant", "content": reply})
 
-# ---------------------------
-# Optional: small footer (non-invasive)
-# ---------------------------
-st.markdown("---")
-st.caption("⚡ Developed by Ebaad")
